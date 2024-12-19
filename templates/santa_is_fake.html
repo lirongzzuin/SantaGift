@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>산타의 선물 찾기</title>
+    <style>
+        body {
+            font-family: 'Nanum Gothic', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('https://pixabay.com/get/g0e7e0c55b1b0d567833ded2e101acaaa.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        header {
+            width: 100%;
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        main {
+            width: 90%;
+            max-width: 480px;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .upload-section {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .upload-section input {
+            margin-top: 1rem;
+            width: 100%;
+            padding: 0.5rem;
+            box-sizing: border-box;
+        }
+        .gift-section {
+            display: none;
+            margin-top: 2rem;
+            text-align: center;
+        }
+        .gift-section img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+        .share-buttons {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .share-buttons button {
+            margin: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+        }
+        .ad-space {
+            margin: 1rem 0;
+            width: 100%;
+            height: 100px;
+            background-color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #888;
+            font-size: 0.9rem;
+            border: 1px dashed #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>산타가 주는 선물은 무엇일까요?</h1>
+    </header>
+    <main>
+        <div class="upload-section">
+            <h2>사진을 업로드하거나 촬영하세요</h2>
+            <input type="file" id="photoInput" accept="image/*">
+            <button onclick="startGiftSearch()">선물 찾기</button>
+        </div>
+        <div class="loading" id="loading">
+            <p>산타가 선물을 찾고 있어요... 🎅</p>
+        </div>
+        <div class="gift-section" id="gift-section">
+            <h2>산타의 선물:</h2>
+            <p id="gift-text"></p>
+            <img id="gift-image" src="" alt="선물 이미지">
+        </div>
+        <div class="ad-space">
+            <p>광고 공간입니다. 광고 코드를 여기에 추가하세요.</p>
+        </div>
+        <div class="share-buttons" style="display:none;" id="share-section">
+            <p>결과를 공유하세요:</p>
+            <button style="background-color: #ffeb3b; color: black;" onclick="shareOnKakao()">카카오톡으로 공유</button>
+            <button style="background-color: #e1306c; color: white;" onclick="shareOnInstagram()">인스타그램으로 공유</button>
+        </div>
+    </main>
+    <script>
+        const gifts = [
+            { text: '럭셔리를 즐기는 당신을 위한 "샤넬백"', image: 'https://via.placeholder.com/150/FF6347/FFFFFF?text=Chanel+Bag' },
+            { text: '얼리어댑터인 당신을 위한 "아이폰 16 프로 맥스"', image: 'https://via.placeholder.com/150/FFD700/FFFFFF?text=iPhone+16+Pro+Max' },
+            { text: '특별한 날을 위한 "럭셔리 크리스마스 디너 세트"', image: 'https://via.placeholder.com/150/00FA9A/FFFFFF?text=Luxury+Dinner+Set' },
+            { text: '활동적인 당신을 위한 "최신형 전기 자전거"', image: 'https://via.placeholder.com/150/8A2BE2/FFFFFF?text=Electric+Bike' },
+            { text: '스마트해 보이는 당신을 위한 "고급 스마트 워치"', image: 'https://via.placeholder.com/150/DC143C/FFFFFF?text=Smart+Watch' },
+            { text: '젓가락질이 형편없을것 같은 당신을 위한 "포크숟가락 세트"', image: 'https://via.placeholder.com/150/FF6347/FFFFFF?text=Fork+Set' },
+            { text: '잠 못 드는 밤을 위한 "코골이 방지 테이프"', image: 'https://via.placeholder.com/150/FFD700/FFFFFF?text=Anti+Snoring+Tape' },
+            { text: '발이 가려워 보이는 당신을 위한 "무좀 양말"', image: 'https://via.placeholder.com/150/00FA9A/FFFFFF?text=Fungal+Socks' },
+            { text: '혼자만의 파티를 위한 "화려한 장식용 깃털 모자"', image: 'https://via.placeholder.com/150/8A2BE2/FFFFFF?text=Feather+Hat' },
+            { text: '겁이 많아 보이는 당신을 위한 "깜짝 소리나는 쿠션"', image: 'https://via.placeholder.com/150/DC143C/FFFFFF?text=Whoopee+Cushion' },
+            { text: '급똥에 시달릴것 같아서 준비했어 "휴대용 두루마리 화장지"', image: 'https://via.placeholder.com/150/FFA07A/FFFFFF?text=Portable+TP' },
+            { text: '전혀 쓸곳없어 보이는 "캔디향 립밤"', image: 'https://via.placeholder.com/150/FF69B4/FFFFFF?text=Candy+Lip+Balm' },
+            { text: '크리스마스 기분을 위한 "미니 크리스마스 트리"', image: 'https://via.placeholder.com/150/228B22/FFFFFF?text=Mini+Tree' },
+            { text: '눈에 띄는 패션을 위한 "LED 깜빡이는 양말"', image: 'https://via.placeholder.com/150/7CFC00/FFFFFF?text=LED+Socks' },
+            { text: '혼자 보낼것 같은 당신을 위한 "산타 모양 양초"', image: 'https://via.placeholder.com/150/FF4500/FFFFFF?text=Santa+Candle' },
+            { text: '어울리진 않을 것 같지만 "귀여운 토끼 슬리퍼"', image: 'https://via.placeholder.com/150/FFC0CB/FFFFFF?text=Rabbit+Slippers' },
+            { text: '정리와는 거리가 멀어보이는 당신을 위한 "1년 된 쿠폰북"', image: 'https://via.placeholder.com/150/0000FF/FFFFFF?text=Expired+Coupon' },
+            { text: '뒷담화의 대상은 아니겠지만 "귀가 간지러운 면봉 세트"', image: 'https://via.placeholder.com/150/8B0000/FFFFFF?text=Q-tips' },
+            { text: '창의력을 자극하는 "스티커 모음집"', image: 'https://via.placeholder.com/150/32CD32/FFFFFF?text=Sticker+Book' },
+            { text: '노잼인 당신을 위한 "재미없는 농담 모음집"', image: 'https://via.placeholder.com/150/FFDAB9/FFFFFF?text=Bad+Joke+Book' }
+        ];
+
+        function startGiftSearch() {
+            const photoInput = document.getElementById('photoInput');
+            const loadingDiv = document.getElementById('loading');
+            const giftSection = document.getElementById('gift-section');
+            const shareSection = document.getElementById('share-section');
+
+            if (!photoInput.files[0]) {
+                alert('사진을 업로드해주세요!');
+                return;
+            }
+
+            loadingDiv.style.display = 'block';
+            giftSection.style.display = 'none';
+            shareSection.style.display = 'none';
+
+            setTimeout(() => {
+                const randomGift = gifts[Math.floor(Math.random() * gifts.length)];
+                document.getElementById('gift-text').textContent = randomGift.text;
+                document.getElementById('gift-image').src = randomGift.image;
+
+                loadingDiv.style.display = 'none';
+                giftSection.style.display = 'block';
+                shareSection.style.display = 'block';
+            }, 2000);
+        }
+
+        function shareOnKakao() {
+            const giftText = document.getElementById('gift-text').textContent;
+            alert(`카카오톡으로 공유하기: 산타가 당신에게 줄 선물은 ${giftText}!`);
+        }
+
+        function shareOnInstagram() {
+            const giftText = document.getElementById('gift-text').textContent;
+            alert(`인스타그램으로 공유하기: 산타가 당신에게 줄 선물은 ${giftText}!`);
+        }
+    </script>
+</body>
+</html>
